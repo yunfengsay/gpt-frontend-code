@@ -51,3 +51,23 @@ export const getBlockCode = (text) => {
     return text
   }
 }
+
+const startWord = '贾维斯';
+const endWord = '执行'
+export const getVoiceText = (text) => {
+  const regex = /贾维斯([^]*$)/;
+  const match = regex.exec(text);
+  let content =  '' 
+  let isOver = false; 
+  if (match) {
+    content =  match[1];
+  }
+  if(content.includes(endWord)) {
+    content.split(endWord)[0]
+    isOver = true;
+  }
+  return {
+    content,
+    isOver
+  };
+}

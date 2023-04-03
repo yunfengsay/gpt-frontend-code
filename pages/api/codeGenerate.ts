@@ -14,6 +14,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
     context.push({'role': 'assistant', 'content': currentHtml})
   }
   const result = await client.writeUseApi(message, {context, accessKey });
+  console.log(result)
   res.json({
     success: true,
     data: result,

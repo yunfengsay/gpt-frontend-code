@@ -1,8 +1,13 @@
+import fetch from "node-fetch";
 const HttpsProxyAgent = require('https-proxy-agent');
 const proxyUrl = 'http://127.0.0.1:1087';
-let proxyAgent
+let proxyAgent:any;
 if(process.platform === 'darwin') {
   proxyAgent = new HttpsProxyAgent(proxyUrl);
+}
+console.log(process.platform)
+if(process.platform === 'linux') {
+  proxyAgent = new HttpsProxyAgent('http://192.168.0.108:7890');
 }
 export default class ChatGPTClient {
   // readonly baseUri = 'https://api.openai.com/v1/chat/completions';
@@ -23,15 +28,15 @@ export default class ChatGPTClient {
       };
       const response = await fetch(this.baseUri, {
         body: JSON.stringify(body),
-        // TODO 如果需要可以修改你的agent地址
-        // agent: proxyAgent,
         method: "POST",
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${accessKey}`,
         },
+        // TODO 如果需要可以修改你的agent地址
+        // agent: proxyAgent,
       }).then(res => res.json()).then(res => {
-        console.log(res)
+        // @ts-ignore
         return res.choices[0].message?.content
       });
       return response

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, Button, message, Modal } from 'antd';
+import { Input, Button, message, Modal, Switch } from 'antd';
 const { TextArea } = Input;
-import { setLocalCache, getLocalCache, copyToClipboard, getBlockCode } from '@/lib';
+import { setLocalCache, getLocalCache, copyToClipboard, getBlockCode, getVoiceText } from '@/lib';
+import { speechRecognition } from '@/lib/stt';
 
 
 let currentHighlightedElement: HTMLElement | null = null;
@@ -54,6 +55,7 @@ const fetchAI = (body) => {
 
 const Chat = (props) => {
   const { setCode } = props;
+  const [prompt, setPrompt] = useState('');
   const ref = useRef<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -71,7 +73,8 @@ const Chat = (props) => {
     }
     // @ts-ignore
     setLoading(true)
-    const value = ref.current?.resizableTextArea?.textArea?.value
+    // const value = ref.current?.resizableTextArea?.textArea?.value
+    const value = prompt;
     const context = currentHighlightedElement?.innerHTML;
     const message = context ? context + ' 这部分按下面要求修改并返回修改后的完整html代码->\n' + value : value;
     fetchAI({
@@ -86,10 +89,20 @@ const Chat = (props) => {
       setLoading(false)
     })
   }
+  const startWord = '贾维斯';
+  const endWord = '执行'
+  const onVoiceText = (text) => {
+    const { content, isOver } = getVoiceText(text)
+    setPrompt(content)
+    if (!content || !isOver) {
+      return
+    }
+    handleSend()
+  }
 
   return <div className="chat rounded-md p-4 shadow-md fixed right-4 bottom-4">
-    <TextArea ref={ref} placeholder="maxLength is 2000" rows={10} maxLength={2000} />
-    <Button loading={loading} onClick={handleSend} className="w-full mt-4 bg-blue-500" type="primary">Subimt</Button>
+    <TextArea ref={ref} value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="maxLength is 2000" rows={10} maxLength={2000} />
+    <Button loading={loading} onClick={handleSend} className="w-full mt-4 bg-blue-500" type="primary">Submit</Button>
     <div className='w-full mt-4 flex justify-between'>
       <Button onClick={() => {
         // reloadAI()
@@ -100,6 +113,9 @@ const Chat = (props) => {
         copyToClipboard(getLocalCache(cacheName) || '')
       }} className="w-1/2 bg-blue-500" type="primary">copy</Button>
       {/* <Button onClick={() => {}} className="w-1/4 bg-blue-500" type="primary">share</Button> */}
+    </div>
+    <div>
+      <VoiceControl onVoiceText={onVoiceText} />
     </div>
   </div>
 }
@@ -124,6 +140,27 @@ const AccessKeyChecker = () => {
     >
       <Input ref={ref} placeholder="accesskey" />
     </Modal>
+  </div>
+}
+
+const VoiceControl = (props) => {
+  const { onVoiceText } = props;
+  const [isRecording, setIsRecording] = useState(false);
+  const onChange = (checked: boolean) => {
+    if (checked) {
+      speechRecognition.start()
+      speechRecognition.onResult(onVoiceText)
+    }
+    if (!checked) {
+      speechRecognition.stop()
+    }
+    setIsRecording(checked)
+  }
+  return <div className='flex w-full bg-blue-300 p-3 rounded-md items-center mt-4'>
+    <span className='font-thin mr-4'>
+      语音控制
+    </span>
+    <Switch className='bg-red-200' checked={isRecording} onChange={onChange} />
   </div>
 }
 
