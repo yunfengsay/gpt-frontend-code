@@ -54,7 +54,7 @@ const fetchAI = (body) => {
 
 const Chat = (props) => {
   const { setCode } = props;
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
