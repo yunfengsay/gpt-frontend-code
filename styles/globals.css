@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 .x-highlight {
+  border-radius: 4px;
+  box-sizing: border-box;
   border: 2px solid red;
   cursor: pointer; 
   transition: all 0.2s ease;

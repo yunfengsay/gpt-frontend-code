@@ -10,8 +10,8 @@ if(process.platform === 'linux') {
   proxyAgent = new HttpsProxyAgent('http://192.168.0.108:7890');
 }
 export default class ChatGPTClient {
-  // readonly baseUri = 'https://api.openai.com/v1/chat/completions';
-  readonly baseUri = 'https://openai.clipmedias.com/v1/chat/completions';
+  readonly baseUri = 'https://api.openai.com/v1/chat/completions';
+  // readonly baseUri = 'https://openai.clipmedias.com/v1/chat/completions';
 
   public async writeUseApi (text: string, {
     model =  'gpt-3.5-turbo',
@@ -34,7 +34,7 @@ export default class ChatGPTClient {
           authorization: `Bearer ${accessKey}`,
         },
         // TODO 如果需要可以修改你的agent地址
-        // agent: proxyAgent,
+        agent: proxyAgent,
       }).then(res => res.json()).then(res => {
         // @ts-ignore
         return res.choices[0].message?.content

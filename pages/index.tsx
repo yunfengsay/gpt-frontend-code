@@ -127,7 +127,8 @@ const AccessKeyChecker = () => {
     setAccessKey(getLocalCache(accessKeyName))
   }, [])
   return <div>
-    <Modal
+    {
+      accessKey && <Modal
       open={!accessKey}
       title="输入accesskey,放心这只会存储到你本地"
       okText="确认"
@@ -140,6 +141,7 @@ const AccessKeyChecker = () => {
     >
       <Input ref={ref} placeholder="accesskey" />
     </Modal>
+    }
   </div>
 }
 
@@ -160,7 +162,7 @@ const VoiceControl = (props) => {
     <span className='font-thin mr-4'>
       语音控制
     </span>
-    <Switch className='bg-red-200' checked={isRecording} onChange={onChange} />
+    <Switch className='bg-red-200 w-auto' checked={isRecording} onChange={onChange} />
   </div>
 }
 
@@ -170,9 +172,6 @@ const CodeGenerator = () => {
     setCode(getLocalCache(cacheName) || '')
   }, [])
 
-  if (typeof window === 'undefined') {
-    return <></>;
-  }
   return <div>
     <AccessKeyChecker />
     {/* eval html code */}
