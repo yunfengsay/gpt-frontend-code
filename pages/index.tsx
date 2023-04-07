@@ -3,10 +3,11 @@ import { Input, Button, message, Modal, Switch } from 'antd';
 const { TextArea } = Input;
 import { setLocalCache, getLocalCache, copyToClipboard, getBlockCode, getVoiceText } from '@/lib';
 import { speechRecognition } from '@/lib/stt';
+import { historyManager } from '@/lib/history';
+import { eventEmmiter } from '@/lib/emitter';
 
 
 let currentHighlightedElement: HTMLElement | null = null;
-const cacheName = '__generated_code';
 const accessKeyName = '__access_key';
 const initHightLight = () => {
   const dom = document.getElementById('container');
@@ -34,11 +35,21 @@ const initHightLight = () => {
     currentHighlightedElement = target;
   });
 
-  dom.addEventListener('keydown', (event: KeyboardEvent) => {
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
     event.stopPropagation();
     if (event.key === 'Escape' && currentHighlightedElement) {
       currentHighlightedElement.classList.remove('highlight');
       currentHighlightedElement = null;
+    } 
+    // ctrl + z 回退 
+    if((event.ctrlKey || event.metaKey) && event.key === 'z') {
+      historyManager.back()
+      eventEmmiter.emit('codechange')
+    }
+    // ctrl + z 前进
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'Z') {
+      historyManager.forward()
+      eventEmmiter.emit('codechange')
     }
   });
 }
@@ -60,11 +71,12 @@ const Chat = (props) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log('reload')
     initHightLight()
-    // if(!getLocalCache(cacheName)) {
-    //   reloadAI()
-    // }
+    eventEmmiter.on('codechange', () => {
+      const data = historyManager.getCurrent()
+      console.log(data)
+      setCode(data) 
+    })
   }, [])
   const handleSend = () => {
     const accessKey = getLocalCache(accessKeyName);
@@ -73,30 +85,29 @@ const Chat = (props) => {
     }
     // @ts-ignore
     setLoading(true)
-    // const value = ref.current?.resizableTextArea?.textArea?.value
     const value = prompt;
     const context = currentHighlightedElement?.innerHTML;
     const message = context ? context + ' 这部分按下面要求修改并返回修改后的完整html代码->\n' + value : value;
     fetchAI({
       message,
       accessKey,
-      currentHtml: getLocalCache(cacheName) || '',
+      currentHtml: historyManager.getCurrent() || '',
     }).then(res => {
       const value = getBlockCode(res?.data);
-      setLocalCache(cacheName, value)
+      historyManager.addHistory(value)
       setCode(value);
     }).finally(() => {
       setLoading(false)
     })
   }
-  const startWord = '贾维斯';
-  const endWord = '执行'
-  const onVoiceText = (text) => {
+    
+  const onVoiceText = (text, reset) => {
     const { content, isOver } = getVoiceText(text)
     setPrompt(content)
     if (!content || !isOver) {
       return
     }
+    reset()
     handleSend()
   }
 
@@ -106,11 +117,11 @@ const Chat = (props) => {
     <div className='w-full mt-4 flex justify-between'>
       <Button onClick={() => {
         // reloadAI()
-        setLocalCache(cacheName, '')
+        historyManager.addHistory('');
         setCode('')
       }} className="w-1/2 mr-4 bg-blue-500" type="primary">reset</Button>
       <Button onClick={() => {
-        copyToClipboard(getLocalCache(cacheName) || '')
+        copyToClipboard(historyManager.getCurrent() || '')
       }} className="w-1/2 bg-blue-500" type="primary">copy</Button>
       {/* <Button onClick={() => {}} className="w-1/4 bg-blue-500" type="primary">share</Button> */}
     </div>
@@ -139,7 +150,7 @@ const AccessKeyChecker = () => {
         setLocalCache(accessKeyName, accessKey)
       }}
     >
-      <Input ref={ref} placeholder="accesskey" />
+      <Input ref={ref} type="password" placeholder="accesskey" />
     </Modal>
     }
   </div>
@@ -169,7 +180,7 @@ const VoiceControl = (props) => {
 const CodeGenerator = () => {
   const [code, setCode] = useState('');
   useEffect(() => {
-    setCode(getLocalCache(cacheName) || '')
+    setCode(historyManager.getCurrent() || '')
   }, [])
 
   return <div>

@@ -52,6 +52,7 @@ export const getBlockCode = (text) => {
   }
 }
 
+
 const startWord = '贾维斯';
 const endWord = '执行'
 export const getVoiceText = (text) => {
@@ -63,7 +64,7 @@ export const getVoiceText = (text) => {
     content =  match[1];
   }
   if(content.includes(endWord)) {
-    content.split(endWord)[0]
+    content = content.split(endWord)[0]
     isOver = true;
   }
   return {

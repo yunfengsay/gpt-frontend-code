@@ -39,12 +39,15 @@ class SpeechRecognition {
       callback && callback()
     }
   }
-  onResult(callback: (content: string) => void) {
+  resetContent(content = '') {
+    this.content = content
+  }
+  onResult(callback: (content: string, cb) => void) {
     this.recognition.onresult = (event: any) => {
-      var current = event.resultIndex;
-      var transcript = event.results[current][0].transcript
+      let current = event.resultIndex;
+      let transcript = event.results[current][0].transcript
       this.content += transcript
-      callback(this.content)
+      callback(this.content, this.resetContent.bind(this))
     }
   }
 }
