@@ -74,7 +74,6 @@ const Chat = (props) => {
     initHightLight()
     eventEmmiter.on('codechange', () => {
       const data = historyManager.getCurrent()
-      console.log(data)
       setCode(data) 
     })
   }, [])
